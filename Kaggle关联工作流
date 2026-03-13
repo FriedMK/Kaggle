@@ -1,64 +1,65 @@
-name: Kaggle 自动备份到 GitHub
-on:
-  schedule:
+name: .github/workflows/kaggle-backup.yml
+on:   :
+  schedule:   时间表:
     - cron: '0 0 * * *'  # 每天凌晨 0 点自动运行（UTC时间，对应北京时间早8点）
   workflow_dispatch:  # 支持手动触发（测试用）
 
-jobs:
+jobs:   工作:
   backup-kaggle-content:
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ubuntu-latest   上运行:ubuntu-latest
+    steps:   步骤:
       # 1. 拉取 GitHub 仓库到 Actions 服务器
       - name: 克隆 GitHub 仓库
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4用途:行动/ checkout@v4
 
       # 2. 配置 Python 环境（Kaggle CLI 依赖 Python）
       - name: 安装 Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+        uses: actions/setup-python@v5用途:行动/ setup-python@v5
+        with:   :
+          python-version: '3.10'   python版本:“3.10”
 
       # 3. 安装 Kaggle 官方库
       - name: 安装 Kaggle CLI
         run: |   运行:|
-          pip install kaggle --upgrade
+          pip install kaggle --upgradePIP安装kaggle——升级
 
       # 4. 配置 Kaggle 凭证（使用你存的 Secrets）
-      - name: 配置 Kaggle API Token
+      - name: 配置 Kaggle API Token-特别是:配置Kaggle API令牌
         run: |   运行:|
           # 创建 Kaggle 配置目录
-          mkdir -p ~/.kaggle
+          mkdir -p ~/.kaggle   Mkdir -p ~/.kaggle
           # 生成 kaggle.json 文件（核心：调用你存的 Secrets）
-          echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_API_KEY }}"}' > ~/.kaggle/kaggle.json
+          echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_API_KEY }}"}' > ~/.kaggle/kaggle.json回显“{"username":"${{secrets”。KAGGLE_USERNAME}}","key":"${{secrets。KAGGLE_API_KEY}}"}' > ~/.kaggle/kaggle.json
           # 设置文件权限（Kaggle 要求必须是 600，否则报错）
-          chmod 600 ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.jsonChmod 600 ~/.kaggle/kaggle.json
 
       # 5. 拉取 Kaggle 内容（Notebook/数据集）
       - name: 拉取 Kaggle Notebook 到 GitHub
-        run: |
+        run: |   运行:|
           # 创建备份目录（避免文件混乱）
-          mkdir -p ./kaggle-backup/notebooks
-          mkdir -p ./kaggle-backup/datasets
+          mkdir -p ./kaggle-backup/notebooksMkdir -p ./kaggle-backup
+otebooks
+          mkdir -p ./kaggle-backup/datasetsMkdir -p ./kaggle-backup/datasets
 
           # ========== 替换这里 ==========
           # 替换为你的 Kaggle 用户名（比如 Kaggle 个人主页 URL 里的名字）
           KAGGLE_USER="Fried-MK"
 
           # 拉取你所有的 Kaggle Notebook
-          echo "开始拉取 Kaggle Notebook..."
+          echo "开始拉取 Kaggle Notebook..."echo "开始拉取 Kaggle Notebook..."
           # 获取所有 Notebook 列表并逐个拉取
-          kaggle kernels list --user $KAGGLE_USER --output csv | grep -v "ref" | cut -d',' -f1 | while read kernel; do
-            if [ -n "$kernel" ]; then
-              kaggle kernels pull $kernel -p ./kaggle-backup/notebooks --force
-              echo "成功拉取 Notebook: $kernel"
+          kaggle kernels list --user $KAGGLE_USER --output csv | grep -v "ref" | cut -d',' -f1 | while read kernel; dokaggle kernel list——user $KAGGLE_USER——output csv | grep -v "ref" | cut -d',' -f1 | while read kernel；做
+            if [ -n "$kernel" ]; then[-n "$kernel"]；然后
+              kaggle kernels pull $kernel -p ./kaggle-backup/notebooks --forceKaggle内核拉$kernel -p。/ kaggle-backup /笔记本电脑——的力量
+              echo "成功拉取 Notebook: $kernel"echo "成功拉取 Notebook: $kernel"
             fi
-          done
+          done   完成
 
           # （可选）拉取你所有的 Kaggle 数据集
-          echo "开始拉取 Kaggle 数据集..."
-          kaggle datasets list --user $KAGGLE_USER --output csv | grep -v "ref" | cut -d',' -f1 | while read dataset; do
-            if [ -n "$dataset" ]; then
-              kaggle datasets download $dataset -p ./kaggle-backup/datasets --unzip --force
+          echo "开始拉取 Kaggle 数据集..."echo "开始拉取 Kaggle 数据集..."
+          kaggle datasets list --user $KAGGLE_USER --output csv | grep -v "ref" | cut -d',' -f1 | while read dataset; dokaggle数据集列表——user $KAGGLE_USER——output csv | grep -v "ref" | cut -d',' -f1 | while read dataset；做
+            if [ -n "$dataset" ]; then如果[-n "；$dataset"]；然后
+              kaggle datasets download $dataset -p ./kaggle-backup/datasets --unzip --forceKaggle数据集下载$dataset -p。/kaggle-backup/datasets——unzip——force
               echo "成功拉取数据集: $dataset"
             fi
           done
