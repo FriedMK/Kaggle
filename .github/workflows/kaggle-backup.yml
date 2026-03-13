@@ -32,25 +32,33 @@ jobs:
           echo '{"username":"${{ secrets.KAGGLE_USERNAME }}","key":"${{ secrets.KAGGLE_API_KEY }}"}' > ~/.kaggle/kaggle.json
           # 设置文件权限（Kaggle 要求必须是 600，否则报错）
           chmod 600 ~/.kaggle/kaggle.json
-
-      # 5. 拉取 Kaggle 内容（Notebook/数据集）
+      # 5. 拉取 Kaggle 内容（Notebook/数据集） - 【修复后的兼容版本】
       - name: 拉取 Kaggle Notebook 到 GitHub
         run: |
-          # 创建备份目录（避免文件混乱）
+          # 创建备份目录
           mkdir -p ./kaggle-backup/notebooks
           mkdir -p ./kaggle-backup/datasets
 
           # ========== 替换这里 ==========
-          # 替换为你的 Kaggle 用户名（比如 Kaggle 个人主页 URL 里的名字）
-          KAGGLE_USER="Fried-MK"
+          # 替换为你的 Kaggle 用户名
+          KAGGLE_USER="Friedmk"
 
-          # 拉取你所有的 Kaggle Notebook
           echo "开始拉取 Kaggle Notebook..."
-          # 获取所有 Notebook 列表并逐个拉取
-          kaggle kernels list --user $KAGGLE_USER --output csv | grep -v "ref" | cut -d',' -f1 | while read kernel; do
+          # 使用兼容写法：不指定 --output，直接 grep 过滤 ref 字段
+          # 这行命令能兼容新旧版本的 Kaggle CLI
+          kaggle kernels list --user $KAGGLE_USER | grep -E "^ref" | awk '{print $2}' | while read kernel; do
             if [ -n "$kernel" ]; then
               kaggle kernels pull $kernel -p ./kaggle-backup/notebooks --force
               echo "成功拉取 Notebook: $kernel"
+            fi
+          done
+
+          echo "开始拉取 Kaggle 数据集..."
+          # 数据集列表同样使用兼容写法
+          kaggle datasets list --user $KAGGLE_USER | grep -v "ref" | awk '{print $1}' | while read dataset; do
+            if [ -n "$dataset" ]; then
+              kaggle datasets download $dataset -p ./kaggle-backup/datasets --unzip --force
+              echo "成功拉取数据集: $dataset"
             fi
           done
 
