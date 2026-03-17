@@ -1,8 +1,9 @@
 name: Kaggle 自动备份到 GitHub
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天凌晨 0 点自动运行（UTC时间，对应北京时间早8点）
-  workflow_dispatch:  # 支持手动触发（测试用）
+    # 每月 1 号凌晨 0 点（UTC 时间）运行，对应北京时间早 8 点
+    - cron: '0 0 1 * *'  
+  workflow_dispatch:  # 保留手动触发（测试用）
 
 jobs:
   backup-kaggle-content:
